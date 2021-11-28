@@ -1,3 +1,5 @@
+window.brightcoveAccountId = '2985902027001';
+
 /** @namespace H5P */
 H5P.VideoBrightcove = (function ($) {
 
@@ -17,9 +19,9 @@ H5P.VideoBrightcove = (function ($) {
     var id = 'h5p-brightcove-' + numInstances;
     numInstances++;
 
+    var videoId = options.brightcoveVideoID;
     var $wrapper = $('<div/>').attr('id','curriki-player-wrapper');
-    var videoId = getId(sources[0].path);
-    window.videoIdGlobal = getId(sources[0].path);
+    var brightcoveData = getId({videoId});
     let videoJsTagId = 'curriki-brightcove';
     
     if (window.bcPlayerExternal) {
@@ -34,7 +36,7 @@ H5P.VideoBrightcove = (function ($) {
       }
       var $placeholder = $('<div/>', {id});
       window.videoJsTagIdGlobal = videoJsTagId;
-      H5P.jQuery('<video-js id="' + videoJsTagId + '" data-account="'+videoId.dataAccount+'" data-player="'+videoId.dataPlayer+'" data-embed="' + videoId.dataEmbed +'" controls="" data-video-id="'+videoId.dataVideoId+'" data-playlist-id="" data-application-id="" class="vjs-fluid"></video-js>').appendTo($placeholder);
+      H5P.jQuery('<video-js id="' + videoJsTagId + '" data-account="'+brightcoveData.dataAccount+'" data-player="'+brightcoveData.dataPlayer+'" data-embed="' + brightcoveData.dataEmbed +'" controls="" data-video-id="'+brightcoveData.dataVideoId+'" data-playlist-id="" data-application-id="" class="vjs-fluid"></video-js>').appendTo($placeholder);
       $placeholder.appendTo($wrapper);
       
       if (window.H5PEditor !== undefined) {
@@ -46,7 +48,7 @@ H5P.VideoBrightcove = (function ($) {
     self.isPlayerLoaded = false;
     
     // Optional placeholder
-    // var $placeholder = $('<iframe id="' + id + '" type="text/html" width="640" height="360" src="https://www.brightcove.com/embed/' + getId(sources[0].path) + '?enablejsapi=1&origin=' + encodeURIComponent(ORIGIN) + '&autoplay=' + (options.autoplay ? 1 : 0) + '&controls=' + (options.controls ? 1 : 0) + '&disabledkb=' + (options.controls ? 0 : 1) + '&fs=0&loop=' + (options.loop ? 1 : 0) + '&rel=0&showinfo=0&iv_load_policy=3" frameborder="0"></iframe>').appendTo($wrapper);
+    // var $placeholder = $('<iframe id="' + id + '" type="text/html" width="640" height="360" src="https://www.brightcove.com/embed/' + getId({brightcoveVideoID}) + '?enablejsapi=1&origin=' + encodeURIComponent(ORIGIN) + '&autoplay=' + (options.autoplay ? 1 : 0) + '&controls=' + (options.controls ? 1 : 0) + '&disabledkb=' + (options.controls ? 0 : 1) + '&fs=0&loop=' + (options.loop ? 1 : 0) + '&rel=0&showinfo=0&iv_load_policy=3" frameborder="0"></iframe>').appendTo($wrapper);
 
     /**
      * Use the Brightcove API to create a new player
@@ -78,8 +80,6 @@ H5P.VideoBrightcove = (function ($) {
 
     function renderPlayer() {
       player = window.bcPlayerExternal ? window.bcPlayerExternal : window.videojs(videoJsTagId);
-      const videoId = getId(sources[0].path);
-
       player.tech_.off('dblclick');
       //************[start full screen]******************
       player.getChild('controlBar').removeChild('FullscreenToggle');
@@ -444,9 +444,12 @@ H5P.VideoBrightcove = (function ($) {
    * @param {Array} sources
    * @returns {Boolean}
    */
+
+  /* 
   Brightcove.canPlay = function (sources) {
-    return getId(sources[0].path);
+    return getId({videoId});
   };
+  */
 
   /**
    * Find id of Brightcove video from given URL.
@@ -456,7 +459,13 @@ H5P.VideoBrightcove = (function ($) {
    * @returns {String} Brightcove video identifier
    */
 
-  var getId = function (url) {
+  var getId = function (brightcoveData) {
+    let brightcoveUrlParts = {dataAccount: window.brightcoveAccountId, dataVideoId: brightcoveData.videoId, dataPlayer: 'default', dataEmbed: 'default'};
+    self.brightcoveUrlParts = brightcoveUrlParts;
+    return brightcoveUrlParts;
+  };
+
+  var getIdLegacy = function (url) {
     // Has some false positives, but should cover all regular URLs that people can find
     var matches = url.match(/((?:(?:https?|ftp|file):\/\/|www\.)players.brightcove.net)\/([0-9]*)\/(\w+)\/(index.html)\?(\w+)\=([0-9]*)/i);
     if (matches && matches.length === 7) {
@@ -492,54 +501,12 @@ H5P.VideoBrightcove = (function ($) {
     } else if (!window.videojs) {
       // Load the API our self
       const script = document.createElement('script');
-      script.src = "https://players.brightcove.net/" + self.brightcoveUrlParts.dataAccount + "/" + window.videoIdGlobal.dataPlayer + "_" + self.brightcoveUrlParts.dataEmbed + "/index.min.js";;
+      script.src = "https://players.brightcove.net/" + self.brightcoveUrlParts.dataAccount + "/" + self.brightcoveUrlParts.dataPlayer + "_" + self.brightcoveUrlParts.dataEmbed + "/index.min.js";
       script.async = false;
       document.body.appendChild(script);
     } else {
       console.log("videojs lib found before initializing.");
     }
-    
-    /*  
-    if (window.onBrightcoveIframeAPIReady !== undefined) {
-      // Someone else is loading, hook in
-      var original = window.onBrightcoveIframeAPIReady;
-      window.onBrightcoveIframeAPIReady = function (id) {
-        loaded(id);
-        original(id);
-      };
-    } else {
-      
-      if (window.bcPlayerExternal) {
-        let css = '.h5p-splash-wrapper { opacity: 0; }';
-        css += ' .h5p-content { border: 0px; }';
-        css += ' .h5p-controls { display: none !important; }';
-        css += ' .h5p-actions { display: none !important; }';
-        css += ' .vjs-has-started .vjs-control-bar { z-index: 2 !important; }';
-        let head = document.head || document.getElementsByTagName('head')[0];
-        let style = document.createElement('style');
-        head.appendChild(style);
-        style.type = 'text/css';
-        if (style.styleSheet){
-          // This is required for IE8 and below.
-          style.styleSheet.cssText = css;
-        } else {
-          style.appendChild(document.createTextNode(css));
-        }
-        window.onBrightcoveIframeAPIReady = loaded;
-      } else if (!window.videojs) {
-        // Load the API our self
-        const script = document.createElement('script');
-        script.src = "https://players.brightcove.net/" + self.brightcoveUrlParts.dataAccount + "/" + window.videoIdGlobal.dataPlayer + "_" + self.brightcoveUrlParts.dataEmbed + "/index.min.js";;
-        script.async = false;
-        document.body.appendChild(script);
-        console.log("loaded pass ....");
-        window.onBrightcoveIframeAPIReady = loaded;
-      } else {
-        console.log("videojs lib found before initializing.");
-      }
-    }
-    */
-
   };
 
   /** @constant {Object} */

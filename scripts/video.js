@@ -151,6 +151,21 @@ H5P.Video = (function ($, ContentCopyrights, MediaCopyright, handlers) {
           disableRemotePlayback: (parameters.visuals.disableRemotePlayback || false)
         }, parameters.l10n);
       }
+    } else if(parameters.brightcoveVideoID) {
+      BrightcoveHandler = handlers.find(fn =>  fn.name ==='Brightcove');
+      if (BrightcoveHandler !== undefined) {
+        BrightcoveHandler.call(self, sources, {
+          controls: parameters.visuals.controls,
+          autoplay: parameters.playback.autoplay,
+          loop: parameters.playback.loop,
+          fit: parameters.visuals.fit,
+          poster: parameters.visuals.poster === undefined ? undefined : parameters.visuals.poster,
+          startAt: parameters.startAt || 0,
+          tracks: tracks,
+          disableRemotePlayback: (parameters.visuals.disableRemotePlayback || false),
+          brightcoveVideoID: parameters.brightcoveVideoID
+        }, parameters.l10n);
+      }
     }
   }
 
