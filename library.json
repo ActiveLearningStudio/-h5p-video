@@ -27,10 +27,10 @@
       "path": "scripts/flash.js"
     },
     {
-      "path": "scripts/video.js"
+      "path": "scripts/brightcove.js"
     },
     {
-      "path": "scripts/brightcove.js"
+      "path": "scripts/video.js"
     }
   ],
   "preloadedCss": [
