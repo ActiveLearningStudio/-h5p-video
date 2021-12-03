@@ -101,8 +101,8 @@ H5P.VideoBrightcove = (function ($) {
       if (window.bcPlayerExternal) {
         var playerReadyStateTime = setInterval(function(e) {
           if (player.readyState() === 3 || player.readyState() === 4) {
+            clearInterval(playerReadyStateTime);
             if (player.hasStarted()) {
-              clearInterval(playerReadyStateTime);
               player.autoplay(true);
               player.pause();
               initializePlayerEvents();
