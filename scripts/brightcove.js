@@ -1,9 +1,10 @@
-if (window.parent.brightcoveAccountId || window.brightcoveAccountId) {
-  window.brightcoveAccountId = window.parent.brightcoveAccountId;
-} else {
-  window.brightcoveAccountId ='6282550302001';
+if (window.bcPlayerExternal === undefined) {
+    if (window.parent.brightcoveAccountId || window.brightcoveAccountId) {
+      window.brightcoveAccountId = window.parent.brightcoveAccountId;
+    } else {
+      window.brightcoveAccountId ='6282550302001';
+    }
 }
-
 
 /** @namespace H5P */
 H5P.VideoBrightcove = (function ($) {
@@ -40,6 +41,7 @@ H5P.VideoBrightcove = (function ($) {
         window.videojs = undefined;
       }
       var $placeholder = $('<div/>', {id});
+      H5P.jQuery($placeholder).hide();
       window.videoJsTagIdGlobal = videoJsTagId;
       H5P.jQuery('<video-js id="' + videoJsTagId + '" data-account="'+brightcoveData.dataAccount+'" data-player="'+brightcoveData.dataPlayer+'" data-embed="' + brightcoveData.dataEmbed +'" controls="" data-video-id="'+brightcoveData.dataVideoId+'" data-playlist-id="" data-application-id="" class="vjs-fluid"></video-js>').appendTo($placeholder);
       $placeholder.appendTo($wrapper);
@@ -112,6 +114,7 @@ H5P.VideoBrightcove = (function ($) {
           H5P.jQuery('.loading-wrapper').remove();
           self.trigger('ready');
           self.trigger('loaded');
+          H5P.jQuery($placeholder).show();
         });
       }
       
