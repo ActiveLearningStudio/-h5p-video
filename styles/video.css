@@ -28,3 +28,11 @@
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
 }
+
+.sub-marker{
+  top: -13px !important;
+}
+    
+.marker{
+  top: unset !important;
+}
