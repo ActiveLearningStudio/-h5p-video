@@ -56,6 +56,43 @@ H5P.VideoBrightcove = (function ($) {
       window.videoJsTagIdGlobal = videoJsTagId;
       H5P.jQuery('<video-js id="' + videoJsTagId + '" data-account="'+brightcoveData.dataAccount+'" data-player="'+brightcoveData.dataPlayer+'" data-embed="' + brightcoveData.dataEmbed +'" controls="" data-video-id="'+brightcoveData.dataVideoId+'" data-playlist-id="" data-application-id="" class="vjs-fluid"></video-js>').appendTo($placeholder);
       $placeholder.appendTo($wrapper);
+
+       //add markersss
+       setTimeout(() => {
+        if(window.videojs){
+          let control = self.parent.$controls;
+          let child_node = control[0].childNodes;
+          let sub_child = child_node[1].childNodes;
+          let copy_ele = sub_child[3];
+          console.log("HHIII INSIDE VIDEO JS INTERACTIVE 1", copy_ele);
+
+          window.videojs.getPlayer(videoJsTagId).ready(function(){
+            var player = this
+            var link = document.createElement('link');
+            link.rel = 'stylesheet'; 
+            link.type = 'text/css';
+            link.href = 'video.css';
+
+            var p = document.createElement('div');
+            p.className = 'vjs-overlay';
+            p.innerHTML = copy_ele.outerHTML;
+            console.log('p', p);
+            
+            player.el().appendChild(p);
+
+            let overlay = document.getElementsByClassName('vjs-overlay');
+            let childs = overlay[0].childNodes;
+            let sub_child = childs[0].childNodes
+            childs[0].classList.add('marker')
+            console.log('overlay', sub_child);
+
+            for(var i = 0; i< sub_child.length; i++){
+              sub_child[i].classList.add('sub-marker')
+            }
+
+          });
+        }
+      }, 3000);
     }
     
     self.brightcoveUrlParts = null;
