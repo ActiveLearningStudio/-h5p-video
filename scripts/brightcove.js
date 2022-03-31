@@ -6,7 +6,9 @@ try {
         window.brightcoveAccountId ='6282550302001';
       }
   }  
-} catch (error) {}
+} catch (error) {
+  window.brightcoveAccountId ='6282550302001';
+}
 
 /** @namespace H5P */
 H5P.VideoBrightcove = (function ($) {
