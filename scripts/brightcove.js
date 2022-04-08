@@ -6,7 +6,13 @@ try {
         window.brightcoveAccountId ='6282550302001';
       }
   }  
-} catch (error) {}
+} catch (error) {
+  if(window.brightcoveAccountId === undefined){
+    window.brightcoveAccountId ='6282550302001';
+  }else{
+    window.brightcoveAccountId = window.brightcoveAccountId
+  }
+}
 
 /** @namespace H5P */
 H5P.VideoBrightcove = (function ($) {
