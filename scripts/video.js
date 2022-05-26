@@ -38,6 +38,9 @@ H5P.Video = (function ($, ContentCopyrights, MediaCopyright, handlers) {
         formatNotSupported: 'Video format not supported.',
         mediaEncrypted: 'Media encrypted.',
         unknownError: 'Unknown error.',
+        vimeoPasswordError: 'Password-protected Vimeo videos are not supported.',
+        vimeoPrivacyError: 'The Vimeo video cannot be used due to its privacy settings.',
+        vimeoLoadingError: 'The Vimeo video could not be loaded.',
         invalidYtId: 'Invalid YouTube ID.',
         unknownYtId: 'Unable to find video with the given YouTube ID.',
         restrictedYt: 'The owner of this video does not allow it to be embedded.'
@@ -46,7 +49,9 @@ H5P.Video = (function ($, ContentCopyrights, MediaCopyright, handlers) {
 
     parameters.a11y = parameters.a11y || [];
     parameters.playback = parameters.playback || {};
-    parameters.visuals = parameters.visuals || {};
+    parameters.visuals = $.extend(true, parameters.visuals, {
+      disableFullscreen: false
+    });
 
     /** @private */
     var sources = [];
@@ -75,6 +80,45 @@ H5P.Video = (function ($, ContentCopyrights, MediaCopyright, handlers) {
     });
 
     /**
+     * Handle autoplay. If autoplay is disabled, it will still autopause when
+     * video is not visible.
+     *
+     * @param {*} $container
+     */
+    const handleAutoPlayPause = function ($container) {
+      // Keep the current state
+      let state;
+      self.on('stateChange', function(event) {
+        state = event.data;
+      });
+
+      // Keep record of autopauses.
+      // I.e: we don't wanna autoplay if the user has excplicitly paused.
+      self.autoPaused = true;
+
+      new IntersectionObserver(function (entries) {
+        const entry = entries[0];
+
+        // This video element became visible
+        if (entry.isIntersecting) {
+          // Autoplay if autoplay is enabled and it was not explicitly
+          // paused by a user
+          if (parameters.playback.autoplay && self.autoPaused) {
+            self.autoPaused = false;
+            self.play();
+          }
+        }
+        else if (state !== Video.PAUSED) {
+          self.autoPaused = true;
+          self.pause();
+        }
+      }, {
+        root: null,
+        threshold: [0, 1] // Get events when it is shown and hidden
+      }).observe($container.get(0));
+    };
+
+    /**
      * Attaches the video handler to the given container.
      * Inserts text if no handler is found.
      *
@@ -86,14 +130,17 @@ H5P.Video = (function ($, ContentCopyrights, MediaCopyright, handlers) {
 
       if (self.appendTo !== undefined) {
         self.appendTo($container);
+
+        // Avoid autoplaying in authoring tool
+        if (window.H5PEditor === undefined) {
+          handleAutoPlayPause($container);
+        }
+      }
+      else if (sources.length) {
+        $container.text(parameters.l10n.noPlayers);
       }
       else {
-        if (sources.length) {
-          $container.text(parameters.l10n.noPlayers);
-        }
-        else {
-          $container.text(parameters.l10n.noSources);
-        }
+        $container.text(parameters.l10n.noSources);
       }
     };
 
@@ -114,20 +161,23 @@ H5P.Video = (function ($, ContentCopyrights, MediaCopyright, handlers) {
 
     // Find player for video sources
     if (sources.length) {
+      const options = {
+        controls: parameters.visuals.controls,
+        autoplay: false,
+        loop: parameters.playback.loop,
+        fit: parameters.visuals.fit,
+        poster: parameters.visuals.poster === undefined ? undefined : parameters.visuals.poster,
+        startAt: parameters.startAt || 0,
+        tracks: tracks,
+        disableRemotePlayback: parameters.visuals.disableRemotePlayback === true,
+        disableFullscreen: parameters.visuals.disableFullscreen === true
+      }
+
       var html5Handler;
       for (var i = 0; i < handlers.length; i++) {
         var handler = handlers[i];
         if (handler.canPlay !== undefined && handler.canPlay(sources)) {
-          handler.call(self, sources, {
-            controls: parameters.visuals.controls,
-            autoplay: parameters.playback.autoplay,
-            loop: parameters.playback.loop,
-            fit: parameters.visuals.fit,
-            poster: parameters.visuals.poster === undefined ? undefined : parameters.visuals.poster,
-            startAt: parameters.startAt || 0,
-            tracks: tracks,
-            disableRemotePlayback: (parameters.visuals.disableRemotePlayback || false)
-          }, parameters.l10n);
+          handler.call(self, sources, options, parameters.l10n);
           handlerName = handler.name;
           return;
         }
@@ -140,31 +190,7 @@ H5P.Video = (function ($, ContentCopyrights, MediaCopyright, handlers) {
 
       // Fallback to trying HTML5 player
       if (html5Handler) {
-        html5Handler.call(self, sources, {
-          controls: parameters.visuals.controls,
-          autoplay: parameters.playback.autoplay,
-          loop: parameters.playback.loop,
-          fit: parameters.visuals.fit,
-          poster: parameters.visuals.poster === undefined ? undefined : parameters.visuals.poster,
-          startAt: parameters.startAt || 0,
-          tracks: tracks,
-          disableRemotePlayback: (parameters.visuals.disableRemotePlayback || false)
-        }, parameters.l10n);
-      }
-    } else if(parameters.brightcoveVideoID) {
-      BrightcoveHandler = handlers.find(fn =>  fn.name ==='Brightcove');
-      if (BrightcoveHandler !== undefined) {
-        BrightcoveHandler.call(self, sources, {
-          controls: parameters.visuals.controls,
-          autoplay: parameters.playback.autoplay,
-          loop: parameters.playback.loop,
-          fit: parameters.visuals.fit,
-          poster: parameters.visuals.poster === undefined ? undefined : parameters.visuals.poster,
-          startAt: parameters.startAt || 0,
-          tracks: tracks,
-          disableRemotePlayback: (parameters.visuals.disableRemotePlayback || false),
-          brightcoveVideoID: parameters.brightcoveVideoID
-        }, parameters.l10n);
+        html5Handler.call(self, sources, options, parameters.l10n);
       }
     }
   }
