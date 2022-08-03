@@ -1,15 +1,15 @@
 /** @namespace H5P */
-H5P.VideoVimeo = (function ($) {
+H5P.VideoKomodo = (function ($) {
 
   /**
-   * Vimeo video player for H5P.
+   * Komodo video player for H5P.
    *
    * @class
    * @param {Array} sources Video files to use
    * @param {Object} options Settings for the player
    * @param {Object} l10n Localization strings
    */
-  function Vimeo(sources, options, l10n) {
+  function Komodo(sources, options, l10n) {
     var self = this;
 
     /**
@@ -73,7 +73,7 @@ H5P.VideoVimeo = (function ($) {
             type: "POST",
             data: {
               videoId: videoId,
-              type: 'vimeo'
+              type: 'komodo'
             },
             url: apiPath,
             success: function (data) {
@@ -81,7 +81,7 @@ H5P.VideoVimeo = (function ($) {
               H5P.setSource(video, qualities[currentQuality].source, self.contentId)
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
-              console.log('Something went wrong with Vimeo!')
+              console.log('Something went wrong with Komodo!')
             }
           });
         } else {
@@ -169,8 +169,8 @@ H5P.VideoVimeo = (function ($) {
       numQualities++;
     }
 
-    if (numQualities > 1 && H5P.VideoVimeo.getExternalQuality !== undefined) {
-      H5P.VideoVimeo.getExternalQuality(sources, function (chosenQuality) {
+    if (numQualities > 1 && H5P.VideoKomodo.getExternalQuality !== undefined) {
+      H5P.VideoKomodo.getExternalQuality(sources, function (chosenQuality) {
         if (qualities[chosenQuality] !== undefined) {
           currentQuality = chosenQuality;
         }
@@ -742,23 +742,38 @@ H5P.VideoVimeo = (function ($) {
    * @param {Array} sources
    * @returns {Boolean}
    */
-  Vimeo.canPlay = function (sources) {
+  Komodo.canPlay = function (sources) {
+    var urlBreak = new URL(sources[0].path).href.split('/');
+    if (urlBreak[2] == 'komododecks.com') {
+      return true;
+    }
+    return false;
+  };
+
+  /**
+   * Check to see if we can play any of the given sources.
+   *
+   * @public
+   * @static
+   * @param {Array} sources
+   * @returns {Boolean}
+   */
+  Komodo.canPlay = function (sources) {
     return getId(sources[0].path);
   };
 
   /**
-   * Find id of Vimeo video from given URL.
+   * Find id of Komodo video from given URL.
    *
    * @private
    * @param {String} url
-   * @returns {String} Vimeo video identifier
+   * @returns {String} Komodo video identifier
    */
 
   var getId = function (url) {
-    // Has some false positives, but should cover all regular URLs that people can find
-    var matches = url.match(/(?:http|https)?:?\/?\/?(?:www\.)?(?:player\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|video\/|)(\d+)(?:|\/\?)/i);
-    if (matches && matches[1]) {
-      return matches[1];
+    var urlBreak = new URL(url).href.split('/');
+    if (urlBreak[2] == 'komododecks.com') {
+      return urlBreak[4];
     }
   };
 
@@ -946,9 +961,9 @@ H5P.VideoVimeo = (function ($) {
     }
   }
 
-  return Vimeo;
+  return Komodo;
 })(H5P.jQuery);
 
 // Register video handler
 H5P.videoHandlers = H5P.videoHandlers || [];
-H5P.videoHandlers.push(H5P.VideoVimeo);
+H5P.videoHandlers.push(H5P.VideoKomodo);
