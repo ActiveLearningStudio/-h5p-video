@@ -65,6 +65,7 @@ H5P.VideoPanopto = (function ($) {
           onIframeReady: function () {
             $placeholder.children(0).text('');
             player.loadVideo();
+            self.trigger('containerLoaded');
           },
           onReady: function () {
             self.trigger('loaded');
@@ -175,7 +176,13 @@ H5P.VideoPanopto = (function ($) {
       if (!player || !player.pauseVideo) {
         return;
       }
-      player.pauseVideo();
+      try {
+        player.pauseVideo();
+      }
+      catch (err) {
+        // Swallow Panopto throwing an error. This has been seen in the authoring
+        // tool if Panopto has been used inside Iv inside CP 
+      }
     };
 
     /**

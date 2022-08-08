@@ -1,9 +1,6 @@
 .h5p-video > video {
   background: #000;
 }
-.h5p-video-flash {
-  color: #fff;
-}
 .h5p-video-loading {
   display: none;
   position: absolute;
@@ -27,4 +24,23 @@
   -webkit-transform: translate(-50%, -50%);
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
+}
+
+/* Fullscreen special handling for Vimeo Player */
+.h5p-video.h5p-vimeo.h5p-fullscreen div[id^=h5p-vimeo-] > div {
+  /* This overrides the Vimeo Player SDKs `responsive` mode while in fullscreen
+   so that the player does not get clipped by the bottom of the screen. */
+  position: unset !important;
+}
+
+/* Constrain loading indicator to video's container when used as intro media */
+.h5p-video.h5p-vimeo.h5p-question-video {
+  position: relative;
+}
+
+.vimeo-failed-loading {
+  color: #fff;
+  text-align: center;
+  padding: 2.5em 1em;
+  background: #222;
 }
